@@ -4,6 +4,8 @@ from smlib.instagram import post_scrapper
 from smlib.ollama import caption_creater
 from globals import db
 import threading
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 
 app = Flask(__name__)
@@ -59,6 +61,16 @@ def post_tweet():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
+# Schedule the job to run every 4 hours
+scheduler = BackgroundScheduler()
+scheduler.add_job(start_fetch_post, 'interval', hours=4)
+scheduler.start()
+
+
 # Starts the Flask app
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    try:
+        app.run(debug=True)
+    except (KeyboardInterrupt, SystemExit):
+        scheduler.shutdown()
